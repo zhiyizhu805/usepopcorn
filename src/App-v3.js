@@ -52,98 +52,66 @@ const average = (arr) =>
 
 //Task:
 //1.Fetch movie data from OMDB API and replace temperory movie data.
-//1.1 get API key from OMDB.This 'KEY' variable is not dependant in other parameters so can be moved outside the component to avoiding uncessary re-rendering.
-//1.2 wrap api call(side effect) in useEffect hook
-//    Effect callbacks are synchronous to prevent race conditions. Put the async function inside a function
-//1.3 use async await function for data fetching
+    //1.1 get API key from OMDB.This 'KEY' variable is not dependant in other parameters so can be moved outside the component to avoiding uncessary re-rendering.
+    //1.2 wrap api call(side effect) in useEffect hook
+    //    Effect callbacks are synchronous to prevent race conditions. Put the async function inside a function
+    //1.3 use async await function for data fetching
 //2.set a loader(display'loading..' when data is fecthing from OMDB).
-//2.1 set a loading state,initial state is false
-// 2.2set loading state to true when data fetching start
-// 2.3 set loading state to false when data fecthing finish
-// 2.4 in case any error happens during the data fetching(immediately jump out of the block),always set loading state back to false in the end
-// 2.5 in JSX, conditionally render component depending on loading state.
+    //2.1 set a loading state,initial state is false
+    // 2.2set loading state to true when data fetching start
+    // 2.3 set loading state to false when data fecthing finish
+    // 2.4 in case any error happens during the data fetching(immediately jump out of the block),always set loading state back to false in the end
+    // 2.5 in JSX, conditionally render component depending on loading state.
 //3.handle error for different situation:
 //3.1 - error1: any error happened during data fetching
-//3.1.1 set error state, initial state is empty string
-// 3.1.2 check if data fetching is success or not by checking response.ok true/false
-//3.1.3 if response.ok is false, throw a customized error. This error can then be catched in catch block by accessing to error.message
-//3.1.5 having a ErrorMessage component for displaying error message
-//3.1.4 set error message to the customized error you previously throw
-// 3.1.6 conditionally rendering component by checking error state, if encouter error, ErrorMessage component will be called and error message should be passed in by prop.
+    //3.1.1 set error state, initial state is empty string
+    // 3.1.2 check if data fetching is success or not by checking response.ok true/false
+    //3.1.3 if response.ok is false, throw a customized error. This error can then be catched in catch block by accessing to error.message
+    //3.1.5 having a ErrorMessage component for displaying error message
+    //3.1.4 set error message to the customized error you previously throw
+    // 3.1.6 conditionally rendering component by checking error state, if encouter error, ErrorMessage component will be called and error message should be passed in by prop.
 //3.2 - error2: data fetching normal but no result returned. Display corresponding customized error onto UI.
-//3.2.1 if data fetchingh is successful, check if there is a result returned.
-//3.2.2 if no result returned,throw an error
-//4. synchronize queries with movie data
-// 4.1 lift up state-query from Search component
-// 4.2 link state-query(Search) with data fetching procedure, synchronizing user input and data fetching. On every letter user input, we should fire a data fecthing request to OMDB.
-//   4.2.1 include state-query in useEffect dependency array, so whenever state-query change, the data fetching function will be fired.
-//   4.2.2 set a guard, when query length<3, do not call fecthingDataFromOMDB function.
-//5.Selecting a movie.
-//5.1 when click movie, show the movieID on the left sidebar(replace the watched movie content)
-//5.2 add a 'go back' button to allow user go back from the movieID to the watched movie content
-//5.3 when user click the same movie again, also close the id page
-
-const KEY = "4d3e237d";
+    //3.2.1 if data fetchingh is successful, check if there is a result returned.
+    //3.2.2 if no result returned,throw an error
+const KEY = "4d3e237d11";
 export default function App() {
   const [movies, setMovies] = useState([]);
   const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [query, setQuery] = useState("inception");
-  const [movieId, setMovieId] = useState("tt1375666");
-
-  function handleSelectMovie(id) {
-    // 🙅id === movieId ? handleCloseMovie() : setMovieId(id);
-    // now we are setting the new state based on the current one, use arrow function
-    setMovieId((selectedId) => (id === movieId ? null : id));
-  }
-
-  function handleCloseMovie() {
-    setMovieId(null);
-  }
-
-  useEffect(
-    function () {
-      async function fecthingDataFromOMDB() {
-        try {
-          setIsLoading(true);
-          // ❗️Remember to reset Error，otherwise the error message will stay on the screen forever even after an error is gone.
-          setError("");
-          // const query = "Interstellar";
-          const response = await fetch(
-            `https://www.omdbapi.com/?s=${query}&apikey=${KEY}`
+  
+  useEffect(function () {
+    async function fecthingDataFromOMDB() {
+      try {
+        setIsLoading(true);
+        const query = "Interstellar";
+        const response = await fetch(
+          `https://www.omdbapi.com/?s=${query}&apikey=${KEY}`
           );
-          console.log("response", response);
-          if (!response.ok) {
-            throw Error("Something went wrong!Fail to fetch data.");
-          }
-          const data = await response.json();
-          if (data.Response === "False")
-            throw Error(`No movies found. Please try other key words.`);
-          console.log("data", data); //{Response: 'False', Error: 'Movie not found!'}
-          setMovies(data.Search);
-          setIsLoading(false);
-        } catch (error) {
-          console.error("error", error);
-          setError(error.message);
-        } finally {
-          setIsLoading(false);
+        console.log('response',response)
+        if (!response.ok) {
+          throw Error("Something went wrong!Fail to fetch data.");
         }
+        const data = await response.json();
+        if (data.Response === "False")
+          throw Error(`No movies found. Please try other key words.`);
+        console.log("data", data); //{Response: 'False', Error: 'Movie not found!'}
+        setMovies(data.Search);
+        setIsLoading(false);
+      } catch (error) {
+        console.error("error", error);
+        setError(error.message);
+      } finally {
+        setIsLoading(false);
       }
-      if (query.length < 3) {
-        setMovies([]);
-        setError("");
-        return;
-      }
-      fecthingDataFromOMDB();
-    },
-    [query]
-  );
+    }
+    fecthingDataFromOMDB();
+  }, []);
 
   return (
     <>
       <NavBar>
-        <Search query={query} setQuery={setQuery} />
+        <Search />
         <Numresults movies={movies} />
       </NavBar>
       <Main>
@@ -158,23 +126,12 @@ export default function App() {
             <MovieList movies={movies} />
           )} */}
           {isLoading && <Loader />}
-          {!isLoading && !error && (
-            <MovieList movies={movies} onSetMovieId={handleSelectMovie} />
-          )}
+          {!isLoading && !error && <MovieList movies={movies} />}
           {error && <ErrorMessage message={error} />}
         </Box>
         <Box>
-          {movieId ? (
-            <MovieDetails
-              selectedId={movieId}
-              onCloseMovie={handleCloseMovie}
-            />
-          ) : (
-            <>
-              <WatchedSummary watched={watched} />
-              <WatchedMovieList watched={watched} />{" "}
-            </>
-          )}
+          <WatchedSummary watched={watched} />
+          <WatchedMovieList watched={watched} />
         </Box>
         {/* Passing elements as props(Alternartive to children) */}
         {/* <Box element={<MovieList movies={movies} />} />
@@ -221,7 +178,8 @@ function Logo() {
   );
 }
 
-function Search({ query, setQuery }) {
+function Search() {
+  const [query, setQuery] = useState("");
   return (
     <input
       className="search"
@@ -270,20 +228,20 @@ function Box({ children }) {
 //   );
 // }
 
-function MovieList({ movies, onSetMovieId }) {
+function MovieList({ movies }) {
   // const [movies, setMovies] = useState(tempMovieData);
   return (
     <ul className="list">
       {movies?.map((movie) => (
-        <Movie movie={movie} key={movie.imdbID} onSetMovieId={onSetMovieId} />
+        <Movie movie={movie} key={movie.imdbID} />
       ))}
     </ul>
   );
 }
 
-function Movie({ movie, onSetMovieId }) {
+function Movie({ movie }) {
   return (
-    <li onClick={() => onSetMovieId(movie.imdbID)}>
+    <li>
       <img src={movie.Poster} alt={`${movie.Title} poster`} />
       <h3>{movie.Title}</h3>
       <div>
@@ -293,56 +251,6 @@ function Movie({ movie, onSetMovieId }) {
         </p>
       </div>
     </li>
-  );
-}
-
-function MovieDetails({ selectedId, onCloseMovie }) {
-  const [movie, setMovie] = useState({});
-  const {
-    Title: title,
-    Year: year,
-    Poster: poster,
-    Runtime: runtime,
-    imdbRating,
-    Plot: plot,
-    Released: released,
-    Actors: actors,
-    Director: director,
-    Genre: genre,
-  } = movie;
-  console.log(title, year);
-  useEffect(function () {
-    async function getMovieDetails() {
-      const res = await fetch(
-        `https://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`
-      );
-      const data = await res.json();
-      setMovie(data);
-    }
-    getMovieDetails();
-  }, []);
-  return (
-    <div className="details">
-      {/* No need arrow function in the onClick event since we dont pass any parameters in */}
-      <header>
-        <button className="btn-back" onClick={onCloseMovie}>
-          &larr;
-        </button>
-        {selectedId}
-        <img src={poster} alt={`Poster of ${movie} movie`} />
-        <div className="details-overview">
-          <h2>{title}</h2>
-          <p>
-            {released} &bull; {runtime}
-          </p>
-          <p>{genre}</p>
-          <p>
-            <span>⭐️</span>
-            {imdbRating} IMDB Rating
-          </p>
-        </div>
-      </header>
-    </div>
   );
 }
 
